@@ -1,0 +1,5 @@
+{
+    "save_location": "./option_tradier_scraper/",
+    "api_type": "sandbox",
+    "symbol_list_file": "./symbol_list.json"
+}
