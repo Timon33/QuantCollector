@@ -1,4 +1,4 @@
-# Option Tradier Data Scraper
+# Tradier Option Scraper
 
 ## Usage
 
@@ -7,10 +7,14 @@
 
 ## TODO
 
-- Logging module
+### Features
+
 - Pushbukllet notifications
 - Rate limiting
-- Git hub
 - Space effective data storage
 - Imporoved error handling
+
+### Updates
+
 - Status web server
+- Fundamental data

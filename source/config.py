@@ -1,5 +1,8 @@
 import os
 import json
+import logging
+
+# load and read config
 
 CONFIG_FILE_NAME = "config.json"
 
@@ -14,7 +17,8 @@ def load_config():
             config_json = json.load(f)
     
     except Exception as e:
-        print(f"can't load config.\n{e}")
+        logger = logging.getLogger("main.config")
+        logger.error(f"can't load config.\n{e}")
         exit()
 
     return config_json
@@ -24,6 +28,10 @@ def save_location() -> str:
 
 def api_type() -> str:
     return load_config()["api_type"]
+
+def logging_location() -> str:
+    return load_config()["logging_location"]
+
 
 def symbol_list() -> list:
     file_name = load_config()["symbol_list_file"]

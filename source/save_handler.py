@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 
 from datetime import datetime
@@ -16,15 +17,21 @@ import shutil
 # determine if the market was open today
 def was_market_open(api_key: str) -> bool:
     calender = tradier_api.get_calender(api_key)
-    days = calender["calendar"]["days"]["day"]
-    
-    info_today = days[datetime.today().day - 1]
+
+    try:
+        days = calender["calendar"]["days"]["day"] 
+        info_today = days[datetime.today().day - 1]
+    except Exception as e:
+        logger = logging.getLogger("main.save_handler")
+        logger.error(f"Error determinig when the market was open.\n{e}")
+
     return info_today["status"] == "open"
 
 def mkdir(loaction):
     if not os.path.isdir(loaction):
         os.mkdir(loaction)
 
+# creates no existing folder and return path to save location for symbol
 def get_save_loaction(symbol: str):
     save_location = config.save_location()
     mkdir(save_location)
@@ -37,13 +44,18 @@ def get_save_loaction(symbol: str):
 
     return save_location
 
+# contracts.json containing all option contract names for that day
 def save_contract_list(api_key: str, symbol: str):
     save_location = get_save_loaction(symbol)
+    if os.path.isfile(f"{save_location}.zip"):
+        return
+
     contracts = tradier_api.lookup_options_symbols(api_key, symbol)
 
     with open(os.path.join(save_location, "contrats.json"), "w") as f:
         json.dump(contracts, f, indent=4)
 
+#save the option chain for one experation as one file
 def save_option_chain(api_key: str, symbol:str, expiration: datetime):
     save_location = get_save_loaction(symbol)
     option_chain = tradier_api.get_option_chains(api_key, symbol, expiration)
@@ -52,6 +64,8 @@ def save_option_chain(api_key: str, symbol:str, expiration: datetime):
     with open(os.path.join(save_location, filename), "w") as f:
         json.dump(option_chain, f, indent=4)
 
+# save all the option chains for one symbol
+# TODO save all options chains into one file and change top-level json structure
 def save_all_option_chains(api_key: str, symbol: str):
     location = get_save_loaction(symbol)
     if os.path.isfile(f"{location}.zip"):
@@ -61,7 +75,8 @@ def save_all_option_chains(api_key: str, symbol: str):
     try:
         expirations = expirations["expirations"]["date"]
     except Exception as e:
-        print(f"no options for symbol {symbol}\n{e}")
+        logger = logging.getLogger("main.save_handler")
+        logger.error(f"no options for symbol {symbol}\n{e}")
         return
 
     expirations = list(map(lambda x: datetime.fromisoformat(x), expirations))
