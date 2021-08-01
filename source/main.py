@@ -50,7 +50,7 @@ def main():
 
     logger.warning("Starting downloads")
 
-    if not save_handler.was_market_open(secret.TRADIER_API_KEY):
+    if save_handler.was_market_open(secret.TRADIER_API_KEY):
         download_option_data(secret.TRADIER_API_KEY)
     else:
         logger.warning("market wasn't open")
