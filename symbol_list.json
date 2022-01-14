@@ -1,5 +1,5 @@
 {
-    "list": [
+    "stocks": [
         "MMM",
         "AOS",
         "ABT",
@@ -606,9 +606,9 @@
         "MINT",
         "VTEB",
         "IEF",
-
         "GME",
         "AMC",
-        "BB"
+        "BB",
+        "PLTR"
     ]
 }
