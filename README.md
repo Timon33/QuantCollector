@@ -2,17 +2,19 @@
 
 ## Usage
 
-- Add tradier api key in `source/main.py`
-- Use crownjob or similar util to run `main.py`
+- Add tradier the api key in a `secret.txt` file located in the root directory
+- Use cronjob or similar util to run `main.py`
+
+The config.json file can be used to change settings like save locations.
 
 ## TODO
 
 ### Features
 
-- Pushbukllet notifications
+- push notifications
 - Rate limiting
 - Space effective data storage
-- Imporoved error handling
+- Improved error handling
 
 ### Updates
 
