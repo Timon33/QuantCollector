@@ -5,7 +5,8 @@ import logging
 # load and read config
 logger = logging.getLogger(__name__)
 
-CONFIG_FILE_NAME = "../config.json"
+# TODO find good way to set this
+CONFIG_FILE_NAME = "config.json"
 
 
 # (re)loads the config from disk
@@ -30,7 +31,7 @@ def get_config() -> dict:
 def get_secret() -> str:
     try:
         with open(get_config()["secret"], "r") as f:
-            secrets = f.read()
+            secrets = f.read().strip()
             if secrets.isascii():
                 return secrets
             else:
