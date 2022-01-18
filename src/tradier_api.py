@@ -10,13 +10,18 @@ logger = logging.getLogger(__name__)
 
 
 # properly convert the responses to json (dict) objects
-def get_to_json(endpoint, api_key, params):
+def get_to_json(endpoint, api_key, params) -> dict:
     api_type = config.get_config()["api_type"]
 
-    response = requests.get(f"https://{api_type}.tradier.com{endpoint}",
-                            params=params,
-                            headers={"Authorization": f"Bearer {api_key}", "Accept": "application/json"},
-                            )
+    try:
+        response = requests.get(f"https://{api_type}.tradier.com{endpoint}",
+                                params=params,
+                                headers={"Authorization": f"Bearer {api_key}", "Accept": "application/json"},
+                                timeout=5
+                                )
+    except requests.exceptions.Timeout:
+        logger.error(f"API request timed out! endpoint {endpoint} params {params}")
+        return dict()
 
     # 2xx success status code
     # TODO handel other status codes correctly
@@ -26,7 +31,7 @@ def get_to_json(endpoint, api_key, params):
             return response_json
         except json.JSONDecodeError as e:
             logger.error(f"error parsing json response!\n{e}")
-            return
+            return dict()
 
     # error
     else:
@@ -77,5 +82,17 @@ def get_calender(api_key: str, month: int = None, year: int = None):
 
     params = {"month": month, "year": year}
     return get_to_json("/v1/markets/calendar", api_key, params)
+
+
+def get_clock(api_key: str, delayed=False):
+    # delays the clock by 15 min if in sandbox mode to match other apis
+    if config.get_config()["api_type"] == "sandbox":
+        delayed = True
+
+    logger.debug(f"get clock api request: delayed {delayed}")
+
+    params = {"delayed": str(delayed).lower()}
+    return get_to_json("/v1/markets/clock", api_key, params)
+
 
 # TODO add other api calls (fundamental data...)

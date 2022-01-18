@@ -1,7 +1,9 @@
 {
-    "save_location": "./option_tradier_scraper/",
+    "save_location": "/mnt/store/option_tradier_scraper",
     "api_type": "sandbox",
-    "symbol_list_file": "./symbol_list.json",
-    "logging_location": "./log.txt",
-    "secret": "./secret.txt"
+    "symbol_list_file": "../symbol_list.json",
+    "logging_location": "../log.txt",
+    "logging_level": "INFO",
+    "secret": "../secret.txt",
+    "overwrite_files": "true"
 }
