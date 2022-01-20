@@ -24,8 +24,12 @@ def load_config() -> dict:
     return config_json
 
 
-def get_config() -> dict:
-    return CONFIG_DICT
+def get_config(entry_name: str) -> str:
+    try:
+        CONFIG_DICT[entry_name]
+    except KeyError as e:
+        logger.critical(f"Entry for '{entry_name}' not found!\n{e}\nAborting!")
+        exit(1)
 
 
 def get_secret() -> str:
@@ -52,12 +56,14 @@ def get_loglevel() -> int:
 
 def get_symbols() -> list:
     try:
-        with open(get_config()["symbol_list_file"], "r") as f:
-            return json.load(f)["symbols"]
+        with open(get_config().get("symbol_list_file"), "r") as f:
+            return json.load(f).get("symbols", list())
     except IOError as e:
         logger.critical(f"Could not find symbols list file {get_config()['symbol_list_file']}\n{e}")
+        exit(1)
     except json.JSONDecodeError as e:
         logger.critical(f"Could not decode symbol list file\n{e}")
+        exit(1)
 
 
 CONFIG_DICT = load_config()

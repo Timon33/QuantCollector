@@ -39,10 +39,13 @@ def main():
 
     api_secret = config.get_secret()
 
-    market_status = tradier_api.get_clock(api_secret, delayed=True)['clock']
-    market_status["timestamp"] = datetime.datetime.fromtimestamp(market_status["timestamp"],
-                                                                 save_handler.get_timezone()).strftime("%d.%m.%Y %X")
-    logger.info(f"Current exchange status:\n{json.dumps(market_status, indent=4)}")
+    market_status = tradier_api.get_clock(api_secret, delayed=True).get("clock")
+    if market_status is not None:
+        market_status["timestamp"] = datetime.datetime.fromtimestamp(market_status["timestamp"],
+                                                                     save_handler.get_timezone()).strftime("%d.%m.%Y %X")
+        logger.info(f"Current exchange status:\n{json.dumps(market_status, indent=4)}")
+    else:
+        logger.warning("Couldn't get current time from API")
 
     save_handler.download_option_data(api_secret)
 

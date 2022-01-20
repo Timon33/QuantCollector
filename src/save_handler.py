@@ -35,7 +35,7 @@ def get_date_string(date=None) -> str:
 
 # creates no existing folder and return path to save location for symbol
 def get_save_location(symbol: str):
-    save_location = config.get_config()["save_location"]
+    save_location = config.get_config("save_location")
     mkdir(save_location)
 
     save_location = os.path.join(save_location, symbol)
@@ -67,7 +67,7 @@ def save_option_chain(api_key: str, symbol: str, expiration: datetime, save_loca
 # save all the option chains for one symbol
 def save_all_option_chains(api_key: str, symbol: str, location: str):
     if os.path.isfile(os.path.join(location, f"{get_date_string()}.zip")) and\
-            str(config.get_config()["overwrite_files"]).lower() != "true":
+            str(config.get_config("overwrite_files")).lower() != "true":
 
         logger.warning(f"the file {location}.zip already exists! Skipping downloading data for symbol {symbol}")
         return
@@ -94,10 +94,22 @@ def download_option_data(api_key: str):
     symbol_list = sorted(config.get_symbols())
     n_symbols = len(symbol_list)
 
+    if n_symbols < 1:
+        logger.critical("No Symbols in list! Aborting")
+        exit(1)
+
     for i, symbol in enumerate(symbol_list):
         # progress info
         logger.info(f"{i + 1}/{n_symbols} ({(i + 1) / n_symbols * 100:.2f}%) downloading data for {symbol}...")
 
         save_location = get_save_location(symbol)
-        save_contract_list(api_key, symbol, save_location)
-        save_all_option_chains(api_key, symbol, save_location)
+
+        # TODO finner error handling
+        try:
+            save_contract_list(api_key, symbol, save_location)
+            save_all_option_chains(api_key, symbol, save_location)
+        except IOError:
+            logger.error(f"IO Error for symbol {symbol}")
+        except json.JSONDecodeError:
+            logger.error(f"Json Decode Error for symbol {symbol}")
+

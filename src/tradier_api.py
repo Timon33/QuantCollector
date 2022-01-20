@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 # properly convert the responses to json (dict) objects
 def get_to_json(endpoint, api_key, params) -> dict:
-    api_type = config.get_config()["api_type"]
+    api_type = config.get_config("api_type")
 
     try:
         response = requests.get(f"https://{api_type}.tradier.com{endpoint}",
@@ -38,7 +38,7 @@ def get_to_json(endpoint, api_key, params) -> dict:
         logger.error("API did not return status code 200:")
         logger.error(response.status_code)
         logger.error(response.text)
-        return
+        return dict()
 
 
 # exactly matches the option related endpoints of the tradier api
@@ -86,7 +86,7 @@ def get_calender(api_key: str, month: int = None, year: int = None):
 
 def get_clock(api_key: str, delayed=False):
     # delays the clock by 15 min if in sandbox mode to match other apis
-    if config.get_config()["api_type"] == "sandbox":
+    if config.get_config("api_type") == "sandbox":
         delayed = True
 
     logger.debug(f"get clock api request: delayed {delayed}")
