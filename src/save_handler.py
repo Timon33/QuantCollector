@@ -5,7 +5,7 @@ import datetime
 import pytz
 
 import config
-import tradier_api
+from src.apis import tradier
 import shutil
 
 logger = logging.getLogger(__name__)

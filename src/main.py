@@ -5,7 +5,7 @@ import sys
 
 import config
 import save_handler
-import tradier_api
+from src.apis import tradier
 
 
 # this script is called by cronjob or similar util
