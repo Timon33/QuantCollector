@@ -1,4 +1,4 @@
-# Tradier Option Scraper
+# The Quant Collector
 
 ## Usage
 

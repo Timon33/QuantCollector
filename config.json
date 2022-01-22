@@ -1,9 +1,27 @@
 {
-    "save_location": "/mnt/store/option_tradier_scraper",
-    "api_type": "sandbox",
-    "symbol_list_file": "../symbol_list.json",
-    "logging_location": "../log.txt",
+    "save_location": "/mnt/store/data",
+    "symbol_list_file": "symbol_list.json",
+    "logging_location": "log.txt",
     "logging_level": "INFO",
-    "secret": "../secret.txt",
-    "overwrite_files": "true"
+
+    "overwrite_files": "true",
+
+    "apis": {
+        "tradier": {
+            "sand_endpoint": "tradier.com",
+            "api_type": "sandbox",
+            "secret": "secrets/tradier.txt",
+            "protocol": "https"
+        },
+
+        "tda": {
+            "endpoint": "api.tdameritrade.com/v1/",
+            "secret": "secrets/tda.txt",
+            "protocol": "https"
+        },
+
+        "nasdaq": {
+            "secret": "secrets/nasdaq.txt"
+        }
+    }
 }
