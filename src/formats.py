@@ -22,69 +22,21 @@ class TimeFrames(Enum):
 
 
 class OptionType(Enum):
-    call = auto()
-    put = auto()
+    call = "call"
+    put = "put"
 
 
 class ExpirationType(Enum):
-    intra = auto()
-    week = auto()
-    month = auto()
+    intra = "intra"
+    week = "week"
+    month = "month"
 
 
 class ExerciseType(Enum):
-    american = auto()
-    europe = auto()
+    american = "american"
+    europe = "europe"
 
 
-@dataclass
-class OptionData:
-    symbol: str
-    option_type: OptionType
-    strike: float
-    in_the_money: bool
-    volume: int
-    bid: float
-    ask: float
-    open: float
-    high: float
-    low: float
-    close: float
-    last: float
-    change: float
-    expiration_date: datetime
-    days_to_expiration: int
-    change_percentage: float
-    bid_size: int
-    ask_size: int
-    open_interest: int
-    expiration_type: ExpirationType
-    exercise_type: ExerciseType
-    delta: float
-    gamma: float
-    theta: float
-    vega: float
-    rho: float
-    phi: float
-    bid_iv: float
-    mid_iv: float
-    ask_iv: float
-    smv_vol: float
 
 
-@dataclass
-class PriceData:
-    volume: int
-    bid: float
-    ask: float
-    open: float
-    high: float
-    low: float
-    close: float
-    last: float
-    dividends: float
-    split: float
 
-
-class FundamentalData(ABC):
-    pass

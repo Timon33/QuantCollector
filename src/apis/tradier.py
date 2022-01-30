@@ -1,19 +1,20 @@
 import requests
 import json
 import logging
+import pandas as pd
 
 from datetime import datetime
 from enum import Enum, auto
 
-from .. import config, formats
-from .. import api_interface
+from src import config, formats
+from src import api_interface
 
 logger = logging.getLogger(__name__)
 
 
 class ApiType(Enum):
-    live = auto()
-    sandbox = auto()
+    live = "live"
+    sandbox = "sandbox"
 
 
 class TradierAPI(api_interface.EquityAPI):
@@ -24,10 +25,8 @@ class TradierAPI(api_interface.EquityAPI):
 
     # properly convert the responses to json (dict) objects
     def get_to_json(self, endpoint, params) -> dict:
-        api_type = config.get_config("api_type")
-
         try:
-            response = requests.get(f"https://{self.api_type}.tradier.com{endpoint}",
+            response = requests.get(f"https://{self.api_type.value}.tradier.com{endpoint}",
                                     params=params,
                                     headers={"Authorization": f"Bearer {self.secret}", "Accept": "application/json"},
                                     timeout=5
@@ -53,7 +52,7 @@ class TradierAPI(api_interface.EquityAPI):
             logger.error(response.text)
             return dict()
 
-    def get_options_expirations(self, symbol: str, include_all_roots: bool = True, strikes: bool = True):
+    def get_options_expirations(self, symbol: str, include_all_roots: bool = True, strikes: bool = False):
         logger.debug(f"get options chain api request: sym {symbol}")
 
         params = {'symbol': symbol, 'includeAllRoots': str(include_all_roots).lower(), 'strikes': str(strikes).lower()}
@@ -65,11 +64,24 @@ class TradierAPI(api_interface.EquityAPI):
         params = {'underlying': underlying}
         return self.get_to_json("/v1/markets/options/lookup", params)
 
-    def download_option_chains(self, symbol: str, interval: formats.TimeInterval):
-        logger.debug(f"get options chain api request: sym {symbol}, expiration {expiration}, greeks {greeks}")
+    def download_option_chains(self, symbol: str, interval: formats.TimeInterval) -> pd.DataFrame:
+        expiration = self.get_options_expirations(symbol)
 
-        params = {'symbol': symbol, 'expiration': str(expiration).split()[0], 'greeks': str(greeks).lower()}
-        return self.get_to_json("/v1/markets/options/chains", params)
+        try:
+            expiration = expiration["expirations"]["date"]
+        except KeyError:
+            logger.error(f"Cant get option expirations for {symbol}. Skipping!")
+            return None
+
+        # list containing options object
+        options = dict()
+        for exp in expiration:
+            params = {'symbol': symbol, 'expiration': exp, 'greeks': "true"}
+            options[datetime.fromisoformat(exp).timestamp()] = self.get_to_json("/v1/markets/options/chains",
+                                                                                params)
+
+        # transform the data into OptionData Objects
+        return pd.DataFrame.from_dict(options, orient="index", columns=)
 
     def download_price_history(self, symbol: str, interval: formats.TimeInterval):
         pass

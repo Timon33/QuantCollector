@@ -26,7 +26,7 @@ def load_config() -> dict:
 
 def get_config(entry_name: str) -> str:
     try:
-        CONFIG_DICT[entry_name]
+        return CONFIG_DICT[entry_name]
     except KeyError as e:
         logger.critical(f"Entry for '{entry_name}' not found!\n{e}\nAborting!")
         exit(1)
@@ -34,7 +34,7 @@ def get_config(entry_name: str) -> str:
 
 def get_secret() -> str:
     try:
-        with open(get_config()["secret"], "r") as f:
+        with open(get_config("secret"), "r") as f:
             secrets = f.read().strip()
             if secrets.isascii():
                 return secrets
@@ -48,7 +48,7 @@ def get_secret() -> str:
 
 def get_loglevel() -> int:
     try:
-        return getattr(logging, get_config()["logging_level"])
+        return getattr(logging, get_config("logging_level"))
     except AttributeError as e:
         logger.warning(f"Debug level specified in config not found. Defaulting to WARNING level.\n{e}")
         return logging.WARNING
@@ -56,10 +56,10 @@ def get_loglevel() -> int:
 
 def get_symbols() -> list:
     try:
-        with open(get_config().get("symbol_list_file"), "r") as f:
+        with open(get_config("symbol_list_file"), "r") as f:
             return json.load(f).get("symbols", list())
     except IOError as e:
-        logger.critical(f"Could not find symbols list file {get_config()['symbol_list_file']}\n{e}")
+        logger.critical(f"Could not find symbols list file {get_config('symbol_list_file')}\n{e}")
         exit(1)
     except json.JSONDecodeError as e:
         logger.critical(f"Could not decode symbol list file\n{e}")
