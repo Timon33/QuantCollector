@@ -1,5 +1,5 @@
 {
-    "save_location": "/mnt/store/data",
+    "save_path": "/mnt/store/data",
     "symbol_list_file": "symbol_list.json",
     "logging_location": "log.txt",
     "logging_level": "INFO",
@@ -8,7 +8,7 @@
 
     "apis": {
         "tradier": {
-            "sand_endpoint": "tradier.com",
+            "url": "tradier.com",
             "api_type": "sandbox",
             "secret": "secrets/tradier.txt",
             "protocol": "https"
@@ -22,6 +22,72 @@
 
         "nasdaq": {
             "secret": "secrets/nasdaq.txt"
+        }
+    },
+
+    "formats": {
+        "option_chain": {
+            "symbol": "str",
+            "option_type": [
+                "call",
+                "put"
+            ],
+            "strike": "float",
+            "in_the_money": "bool",
+            "volume": "int",
+            "bid": "float",
+            "ask": "float",
+            "open": "float",
+            "high": "float",
+            "low": "float",
+            "close": "float",
+            "last": "float",
+            "change": "float",
+            "expiration_date": "datetime",
+            "days_to_expiration": "int",
+            "change_percentage": "float",
+            "bid_size": "int",
+            "ask_size": "int",
+            "open_interest": "int",
+            "expiration_type": [
+                "intra",
+                "week",
+                "month"
+            ],
+            "exercise_type": [
+                "america",
+                "europe"
+            ],
+            "delta": "float",
+            "gamma": "float",
+            "theta": "float",
+            "vega": "float",
+            "rho": "float",
+            "phi": "float",
+            "bid_iv": "float",
+            "mid_iv": "float",
+            "ask_iv": "float",
+            "smv_vol": "float"
+        },
+        "company_fundamental": {
+
+        },
+        "fund_fundamental": {
+
+        },
+        "price_history": {
+            "data": {
+                "volume": "int",
+                "bid": "float",
+                "ask": "float",
+                "open": "float",
+                "high": "float",
+                "low": "float",
+                "close": "float",
+                "last": "float",
+                "dividends": "float",
+                "split": "float"
+            }
         }
     }
 }

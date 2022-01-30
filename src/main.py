@@ -4,7 +4,7 @@ import logging
 import sys
 
 import config
-import save_handler
+import data_util
 from src.apis import tradier
 
 
@@ -37,9 +37,6 @@ def main():
 
     logger.warning("Starting downloads...")
 
-    api_secret = config.get_secret()
-
-    market_status = tradier_api.get_clock(api_secret, delayed=True).get("clock")
     if market_status is not None:
         market_status["timestamp"] = datetime.datetime.fromtimestamp(market_status["timestamp"],
                                                                      save_handler.get_timezone()).strftime("%d.%m.%Y %X")

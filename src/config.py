@@ -2,6 +2,8 @@ import os
 import json
 import logging
 
+from typing import Union
+
 # load and read config
 logger = logging.getLogger(__name__)
 
@@ -24,7 +26,7 @@ def load_config() -> dict:
     return config_json
 
 
-def get_config(entry_name: str) -> str:
+def get_config(entry_name: str) -> Union[str, dict]:
     try:
         return CONFIG_DICT[entry_name]
     except KeyError as e:
@@ -32,17 +34,20 @@ def get_config(entry_name: str) -> str:
         exit(1)
 
 
-def get_secret() -> str:
+def get_api(name) -> dict:
     try:
-        with open(get_config("secret"), "r") as f:
-            secrets = f.read().strip()
-            if secrets.isascii():
-                return secrets
-            else:
-                logger.critical("Secret should only include printable characters! Aborting!")
-                exit(1)
-    except IOError as e:
-        logger.critical(f"Api secret file not found! Aborting!\n{e}")
+        return get_config("apis")[name]
+    except KeyError:
+        logger.error(f"Did not find configuration for api {name}!")
+        return dict()
+
+
+def get_secret(name: str):
+    try:
+        with open(get_api(name).get("secret"), "r") as f:
+            return f.read()
+    except IOError:
+        logger.critical(f"Did not find secret for api {name}! Aborting!")
         exit(1)
 
 

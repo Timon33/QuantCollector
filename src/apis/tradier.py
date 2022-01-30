@@ -6,8 +6,7 @@ import pandas as pd
 from datetime import datetime
 from enum import Enum, auto
 
-from src import config, formats
-from src import api_interface
+from src import config, data_util, api_interface
 
 logger = logging.getLogger(__name__)
 
@@ -19,14 +18,17 @@ class ApiType(Enum):
 
 class TradierAPI(api_interface.EquityAPI):
 
-    def __init__(self, secret, api_type):
-        self.secret = secret
-        self.api_type = api_type
+    name = "tradier"
+
+    def __init__(self):
+        self.secret = config.get_secret(self.name)
+        self.api_type = ApiType(config.get_api(self.name).get("api_type"))
+        self.url = config.get_api(self.name).get("url")
 
     # properly convert the responses to json (dict) objects
     def get_to_json(self, endpoint, params) -> dict:
         try:
-            response = requests.get(f"https://{self.api_type.value}.tradier.com{endpoint}",
+            response = requests.get(f"https://{self.api_type.value}.{self.url}{endpoint}",
                                     params=params,
                                     headers={"Authorization": f"Bearer {self.secret}", "Accept": "application/json"},
                                     timeout=5
@@ -64,27 +66,32 @@ class TradierAPI(api_interface.EquityAPI):
         params = {'underlying': underlying}
         return self.get_to_json("/v1/markets/options/lookup", params)
 
-    def download_option_chains(self, symbol: str, interval: formats.TimeInterval) -> pd.DataFrame:
+    def get_option_chains(self, symbol: str, interval: data_util.TimeInterval) -> pd.DataFrame:
         expiration = self.get_options_expirations(symbol)
 
         try:
             expiration = expiration["expirations"]["date"]
         except KeyError:
             logger.error(f"Cant get option expirations for {symbol}. Skipping!")
-            return None
+            return pd.DataFrame()
 
         # list containing options object
-        options = dict()
+        data_frame = pd.DataFrame()
         for exp in expiration:
             params = {'symbol': symbol, 'expiration': exp, 'greeks': "true"}
-            options[datetime.fromisoformat(exp).timestamp()] = self.get_to_json("/v1/markets/options/chains",
-                                                                                params)
+            json_data = self.get_to_json("/v1/markets/options/chains", params)["options"]["option"]
+            for contract in json_data:
+                # flattens the "greeks" sub dict
+                data_frame.append(pd.Series({**contract.pop("greeks"), **contract}), ignore_index=True)
 
-        # transform the data into OptionData Objects
-        return pd.DataFrame.from_dict(options, orient="index", columns=)
+        data_frame.set_index("symbol", inplace=True)
+        return data_frame
 
-    def download_price_history(self, symbol: str, interval: formats.TimeInterval):
+    def get_price_history(self, symbol: str, interval: data_util.TimeInterval) -> pd.DataFrame:
         pass
 
-    def download_fundamental_data(self, symbol: str, interval: formats.TimeInterval):
+    def get_fundamental_data(self, symbol: str, interval: data_util.TimeInterval) -> pd.DataFrame:
+        pass
+
+    def download_all(self):
         pass
