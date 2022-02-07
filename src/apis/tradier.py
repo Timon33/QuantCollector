@@ -18,6 +18,10 @@ class ApiType(Enum):
 
 class TradierAPI(api_interface.EquityAPI):
 
+    options_renaming = {
+
+    }
+
     name = "tradier"
 
     def __init__(self):
@@ -66,7 +70,14 @@ class TradierAPI(api_interface.EquityAPI):
         params = {'underlying': underlying}
         return self.get_to_json("/v1/markets/options/lookup", params)
 
+    # -- API interface --
+
     def get_option_chains(self, symbol: str, interval: data_util.TimeInterval) -> pd.DataFrame:
+        if interval != data_util.TimeInterval.day:
+            print(interval, interval == data_util.TimeInterval.day)
+            logger.error(f"tradier option data only available in day resolution not {interval}! Skipping {symbol}")
+            return pd.DataFrame()
+
         expiration = self.get_options_expirations(symbol)
 
         try:
@@ -82,9 +93,11 @@ class TradierAPI(api_interface.EquityAPI):
             json_data = self.get_to_json("/v1/markets/options/chains", params)["options"]["option"]
             for contract in json_data:
                 # flattens the "greeks" sub dict
-                data_frame.append(pd.Series({**contract.pop("greeks"), **contract}), ignore_index=True)
+                data_frame = data_frame.append(pd.Series({**contract.pop("greeks"), **contract}), ignore_index=True)
 
         data_frame.set_index("symbol", inplace=True)
+        # TODO add in_the_money column
+        print(data_frame)
         return data_frame
 
     def get_price_history(self, symbol: str, interval: data_util.TimeInterval) -> pd.DataFrame:
@@ -93,5 +106,4 @@ class TradierAPI(api_interface.EquityAPI):
     def get_fundamental_data(self, symbol: str, interval: data_util.TimeInterval) -> pd.DataFrame:
         pass
 
-    def download_all(self):
-        pass
+

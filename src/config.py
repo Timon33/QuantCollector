@@ -10,10 +10,12 @@ logger = logging.getLogger(__name__)
 # TODO find good way to set this
 CONFIG_FILE_NAME = "config.json"
 
+ABS_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 # (re)loads the config from disk
 def load_config() -> dict:
-    config_path = os.path.join(os.getcwd(), CONFIG_FILE_NAME)
+    config_path = os.path.join(ABS_PATH, CONFIG_FILE_NAME)
 
     try:
         with open(config_path, "r") as f:
@@ -44,7 +46,7 @@ def get_api(name) -> dict:
 
 def get_secret(name: str):
     try:
-        with open(get_api(name).get("secret"), "r") as f:
+        with open(os.path.join(ABS_PATH, get_api(name).get("secret")), "r") as f:
             return f.read()
     except IOError:
         logger.critical(f"Did not find secret for api {name}! Aborting!")
@@ -61,7 +63,7 @@ def get_loglevel() -> int:
 
 def get_symbols() -> list:
     try:
-        with open(get_config("symbol_list_file"), "r") as f:
+        with open(os.path.join(ABS_PATH, get_config("symbol_list_file")), "r") as f:
             return json.load(f).get("symbols", list())
     except IOError as e:
         logger.critical(f"Could not find symbols list file {get_config('symbol_list_file')}\n{e}")

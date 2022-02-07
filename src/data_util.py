@@ -1,7 +1,9 @@
 import json
 import logging
+import math
 import os
 import datetime
+import pandas as pd
 import pytz
 import config
 from enum import Enum
@@ -25,6 +27,24 @@ class TimeInterval(Enum):
     month = "month"
     quarter = "quarter"
     year = "year"
+
+    def to_timedelta(self) -> datetime.timedelta:
+        timedelta = _timedelta_map.get(self)
+        return timedelta
+
+    def __eq__(self, other):
+        return self.value == other.value
+
+    def __hash__(self):
+        return id(self)
+
+_timedelta_map = {
+        TimeInterval.second: datetime.timedelta(seconds=1),
+        TimeInterval.minute: datetime.timedelta(minutes=1),
+        TimeInterval.hour: datetime.timedelta(hours=1),
+        TimeInterval.day: datetime.timedelta(days=1),
+        TimeInterval.week: datetime.timedelta(weeks=1)
+    }
 
 
 class TimeFrames(Enum):
@@ -60,11 +80,6 @@ class Symbol:
 logger = logging.getLogger(__name__)
 
 
-def mkdir(location):
-    if not os.path.isdir(location):
-        os.mkdir(location)
-
-
 # Timezone for NY (NYSE and NASDAQ)
 def get_timezone(name="US/Eastern"):
     return pytz.timezone(name)
@@ -75,13 +90,15 @@ def get_date_string(date=None) -> str:
     return date.strftime("%d-%m-%Y")
 
 
+# round up to the next timestamp on the given timeinterval
+def get_rounded_timestamp(interval: TimeInterval, date=None) -> int:
+    date = datetime.datetime.now(get_timezone()) if date is None else date
+    interval_seconds = int(interval.to_timedelta().total_seconds())
+    return math.floor(date.timestamp()) // interval_seconds
+
+
 # creates no existing folder and return path to save location for symbol
-def get_save_location(asset_class: AssetClasses, time_interval: TimeInterval, symbol: Symbol, timestamp: int):
-    return os.path.join(config.get_config("save_location"), asset_class.value, symbol.asset_type, time_interval.value,
-                        symbol.name, str(timestamp))
-
-
-def rename_dict(dictionary: dict, rename: dict) -> dict:
-    for k, v in rename.items():
-        dictionary[v] = dictionary.pop(k)
-    return dictionary
+def get_save_location(asset_class: AssetClasses, asset_type: str, time_interval: TimeInterval, symbol: Symbol):
+    path = os.path.join(config.get_config("save_path"), asset_class.value, asset_type, time_interval.value, symbol.name)
+    os.makedirs(os.path.abspath(path), exist_ok=True)
+    return path
