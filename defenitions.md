@@ -20,9 +20,3 @@
 ## Data Formats
 
 Data Formats depend on the asset class and type (`underlying`, `options`, etc.)
-
-### Equities
-
-Mainly stocks, international
-
-#### Underlying

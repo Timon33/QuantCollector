@@ -38,13 +38,14 @@ class TimeInterval(Enum):
     def __hash__(self):
         return id(self)
 
+
 _timedelta_map = {
-        TimeInterval.second: datetime.timedelta(seconds=1),
-        TimeInterval.minute: datetime.timedelta(minutes=1),
-        TimeInterval.hour: datetime.timedelta(hours=1),
-        TimeInterval.day: datetime.timedelta(days=1),
-        TimeInterval.week: datetime.timedelta(weeks=1)
-    }
+    TimeInterval.second: datetime.timedelta(seconds=1),
+    TimeInterval.minute: datetime.timedelta(minutes=1),
+    TimeInterval.hour: datetime.timedelta(hours=1),
+    TimeInterval.day: datetime.timedelta(days=1),
+    TimeInterval.week: datetime.timedelta(weeks=1)
+}
 
 
 class TimeFrames(Enum):
@@ -99,6 +100,7 @@ def get_rounded_timestamp(interval: TimeInterval, date=None) -> int:
 
 # creates no existing folder and return path to save location for symbol
 def get_save_location(asset_class: AssetClasses, asset_type: str, time_interval: TimeInterval, symbol: Symbol):
-    path = os.path.join(config.get_config("save_path"), asset_class.value, asset_type, time_interval.value, symbol.name)
+    path = os.path.join(config.get_config(
+        "save_path"), asset_class.value, asset_type, time_interval.value, symbol.name)
     os.makedirs(os.path.abspath(path), exist_ok=True)
     return path
