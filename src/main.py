@@ -1,3 +1,6 @@
+from apis import tradier, yahoo
+import data_util
+import config
 import datetime
 import json
 import logging
@@ -5,10 +8,6 @@ import sys
 import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-import config
-import data_util
-from apis import tradier
 
 
 # this script is called by cronjob or similar util
@@ -21,12 +20,14 @@ def logging_setup(stdout_logging_level):
     logger.setLevel(logging.DEBUG)
 
     stdout_handler = logging.StreamHandler(sys.stdout)
-    logfile_handler = logging.FileHandler(config.get_config("logging_location"))
+    logfile_handler = logging.FileHandler(
+        config.get_config("logging_location"))
 
     stdout_handler.setLevel(stdout_logging_level)
     logfile_handler.setLevel(logging.DEBUG)
 
-    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(module)s: %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+    formatter = logging.Formatter(
+        "%(asctime)s - %(levelname)s - %(module)s: %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
     stdout_handler.setFormatter(formatter)
     logfile_handler.setFormatter(formatter)
 
@@ -40,8 +41,12 @@ def main():
 
     logger.warning("Starting downloads...")
 
-    tradier_api = tradier.TradierAPI()
-    tradier_api.download_all(data_util.Symbol("AAPL", None, None), data_util.TimeInterval.day)
+    # tradier_api = tradier.TradierAPI()
+    # tradier_api.download_all(data_util.Symbol("AAPL", None, None), data_util.TimeInterval.day)
+
+    yahoo_api = yahoo.YFinanceAPI()
+    yahoo_api.download_all(data_util.Symbol(
+        "AAPL", None, None), data_util.TimeInterval.day)
 
 
 if __name__ == "__main__":

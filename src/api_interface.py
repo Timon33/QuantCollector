@@ -1,18 +1,25 @@
+import imp
+from importlib.metadata import metadata
 import os.path
 
 import pandas as pd
 import logging
 from abc import ABC, abstractmethod
 
-from src import config
-from src.data_util import Symbol, AssetClasses, TimeInterval, get_save_location, get_rounded_timestamp
+import config
+import data_util
+from data_util import Symbol, AssetClasses, TimeInterval
 
 logger = logging.getLogger(__name__)
 
 
 class API(ABC):
 
-    name = "API baseclass"
+    name = "API_Base"
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.config = config.get_api(self.name)
 
     # saves all data provided by the api for the given symbol
     @abstractmethod
@@ -24,36 +31,37 @@ class EquityAPI(API):
 
     asset_class = AssetClasses.equity
 
-    # TODO consistent data formats across apis
+    # overwriten by implementing subclass, column names/types api specific
 
-    def get_option_chain_format(self):
-        pass
-
-    def get_price_history_format(self):
-        pass
-
-    def get_fundamental_data_format(self):
+    @abstractmethod
+    def download_option_chains(self, symbol: Symbol, interval: TimeInterval) -> pd.DataFrame:
         pass
 
     @abstractmethod
-    def get_option_chains(self, symbol: str, interval: TimeInterval) -> pd.DataFrame:
+    def download_price_history(self, symbol: Symbol, interval: TimeInterval) -> pd.DataFrame:
         pass
 
     @abstractmethod
-    def get_price_history(self, symbol: str, interval: TimeInterval) -> pd.DataFrame:
+    def download_fundamental_data(self, symbol: Symbol, interval: TimeInterval) -> pd.DataFrame:
         pass
 
-    @abstractmethod
-    def get_fundamental_data(self, symbol: str, interval: TimeInterval) -> pd.DataFrame:
-        pass
+    # convert data to common layout to be saved
+
+    def get_price_history(self, symbol: Symbol, interval: TimeInterval) -> pd.DataFrame:
+        dataframe = self.download_price_history(symbol, interval)
+        return dataframe.rename(self.config["column_renaming"]).astype(config.get_dataframe_types("price_history"))
 
     def download_all(self, symbol: Symbol, interval: TimeInterval):
-        logger.info(f"downloading equity data from {self.name} api for {symbol} with resolution {interval}")
-        option_save_path = get_save_location(self.asset_class, "options", interval, symbol)
-        print(option_save_path)
-        timestamp = get_rounded_timestamp(interval)
-        with open(os.path.join(option_save_path, str(timestamp)), "w") as f:
-            f.write(self.get_option_chains(symbol.name, interval).to_csv())
+        logger.info(
+            f"downloading equity data from {self.name} api for {symbol} with resolution {interval}")
+
+        store = config.get_pystore()
+
+        dataframe = self.get_price_history(symbol, interval)
+        store.collection(self.asset_class.value).write(
+            f"{symbol.name}.{interval.name}",
+            dataframe,
+            metadata={"data_source": self.name})
 
 
 class ForexAPI(API):
@@ -62,18 +70,20 @@ class ForexAPI(API):
 
 
 class CryptoAPI(API):
-    pass
+
+    asset_class = AssetClasses.crypto
 
 
 class AlternativeAPI(API):
-    pass
+
+    asset_class = AssetClasses.alternative
 
 
 class BondsAPI(API):
-    pass
+
+    asset_class = AssetClasses.bonds
 
 
 class CommoditiesAPI(API):
-    pass
 
-
+    asset_class = AssetClasses.commodities

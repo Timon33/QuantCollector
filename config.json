@@ -1,33 +1,15 @@
 {
-    "save_path": "/mnt/store/data",
     "symbol_list_file": "symbol_list.json",
     "logging_location": "log.txt",
     "logging_level": "INFO",
-
     "overwrite_files": "true",
-
-    "apis": {
-        "tradier": {
-            "url": "tradier.com",
-            "api_type": "sandbox",
-            "secret": "secrets/tradier.txt",
-            "protocol": "https"
-        },
-
-        "tda": {
-            "endpoint": "api.tdameritrade.com/v1/",
-            "secret": "secrets/tda.txt",
-            "protocol": "https"
-        },
-
-        "nasdaq": {
-            "secret": "secrets/nasdaq.txt"
-        }
+    "pystore": {
+        "path": "/mnt/store/data/pystore",
+        "store": "quantcollector"
     },
-
-    "formats": {
+    "dataframe_types": {
         "option_chain": {
-            "symbol": "str",
+            "contract_symbol": "str",
             "option_type": [
                 "call",
                 "put"
@@ -69,24 +51,20 @@
             "ask_iv": "float",
             "smv_vol": "float"
         },
-        "company_fundamental": {
-
-        },
-        "fund_fundamental": {
-
-        },
+        "company_fundamental": {},
+        "fund_fundamental": {},
         "price_history": {
             "data": {
-                "volume": "int",
-                "bid": "float",
-                "ask": "float",
-                "open": "float",
-                "high": "float",
-                "low": "float",
-                "close": "float",
-                "last": "float",
-                "dividends": "float",
-                "split": "float"
+                "volume": "int64",
+                "bid": "float32",
+                "ask": "float32",
+                "open": "float32",
+                "high": "float32",
+                "low": "float32",
+                "close": "float32",
+                "last": "float32",
+                "dividends": "float32",
+                "split": "float32"
             }
         }
     }
