@@ -1,5 +1,5 @@
 {
-    "column_renaming": {
+    "price_history_column_renaming": {
         "Open": "open",
         "High": "high",
         "Low": "low",
@@ -7,5 +7,6 @@
         "Volume": "volume",
         "Dividends": "dividends",
         "Stock Splits": "split"
-    }
+    },
+    "option_chain_column_renaming": {}
 }

@@ -43,7 +43,7 @@ def get_config(*args) -> Union[str, dict]:
 
 def get_api(name: str) -> dict:
     try:
-        with open(os.path.join(ABS_PATH, API_CONFIG_FOLDER, name)) as f:
+        with open(os.path.join(ABS_PATH, API_CONFIG_FOLDER, f"{name}.json")) as f:
             return json.load(f)
     except IOError:
         logger.critical(f"can't find config for {name} api. Aborting!")

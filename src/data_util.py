@@ -4,7 +4,7 @@ import pandas as pd
 from enum import Enum
 
 
-class AssetClasses(Enum):
+class AssetClass(Enum):
     equity = "equity"
     forex = "forex"
     crypto = "crypto"
@@ -44,24 +44,15 @@ class ExerciseType(Enum):
 
 class Symbol:
 
-    def __init__(self, name: str, asset_type, exchange):
+    def __init__(self, name: str, asset_type=None, exchange=None, region=None, isin=None):
         self.name = name
         self.asset_type = asset_type
         self.exchange = exchange
+        self.region = region
+        self.isin = isin
 
-
-TIMESERIES_DF_TYPES = {
-    "volume": "int64",
-    "bid": "float32",
-    "ask": "float32",
-    "open": "float32",
-    "high": "float32",
-    "low": "float32",
-    "close": "float32",
-    "last": "float32",
-    "dividends": "float32",
-    "split": "float32"
-}
+    def __repr__(self) -> str:
+        return f"{self.name} - {self.asset_type}"
 
 
 logger = logging.getLogger(__name__)
