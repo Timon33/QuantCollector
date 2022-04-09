@@ -41,13 +41,12 @@ def main():
 
     logger.warning("Starting downloads...")
 
-    # tradier_api = tradier.TradierAPI()
-    # tradier_api.download_all(data_util.Symbol("AAPL", None, None), data_util.TimeInterval.day)
+    # yahoo_api = yahoo.YFinanceAPI()
+    # for ticker in config.get_symbols():
+    #     yahoo_api.download_all(data_util.Symbol(ticker), data_util.TimeInterval.day)
 
-    yahoo_api = yahoo.YFinanceAPI()
-    for ticker in config.get_symbols():
-        yahoo_api.download_all(data_util.Symbol(
-            ticker), data_util.TimeInterval.day)
+    tradier_api = tradier.TradierAPI()
+    tradier_api.save_option_chains(data_util.Symbol("AAPL"), data_util.TimeInterval.day)
 
 
 if __name__ == "__main__":

@@ -7,7 +7,7 @@ from datetime import datetime
 from enum import Enum, auto
 
 import config
-import data_util
+from data_util import Symbol, TimeInterval
 import api_interface
 
 logger = logging.getLogger(__name__)
@@ -20,29 +20,24 @@ class ApiType(Enum):
 
 class TradierAPI(api_interface.EquityAPI):
 
-    options_renaming = {
-
-    }
-
     name = "tradier"
 
     def __init__(self):
-        self.secret = config.get_secret(self.name)
-        self.api_type = ApiType(config.get_api(self.name).get("api_type"))
-        self.url = config.get_api(self.name).get("url")
+        super().__init__()
+        self.secret = self.api_conf["secret"]
+        self.api_type = self.api_conf["api_type"]
+        self.url = self.api_conf["url"]
 
     # properly convert the responses to json (dict) objects
     def get_to_json(self, endpoint, params) -> dict:
         try:
-            response = requests.get(f"https://{self.api_type.value}.{self.url}{endpoint}",
+            response = requests.get(f"https://{self.api_type}.{self.url}{endpoint}",
                                     params=params,
-                                    headers={
-                                        "Authorization": f"Bearer {self.secret}", "Accept": "application/json"},
+                                    headers={"Authorization": f"Bearer {self.secret}", "Accept": "application/json"},
                                     timeout=5
                                     )
         except requests.exceptions.Timeout:
-            logger.error(
-                f"API request timed out! endpoint {endpoint} params {params}")
+            logger.error(f"API request timed out! endpoint {endpoint} params {params}")
             return dict()
 
         # 2xx success status code
@@ -62,26 +57,23 @@ class TradierAPI(api_interface.EquityAPI):
             logger.error(response.text)
             return dict()
 
-    def get_options_expirations(self, symbol: str, include_all_roots: bool = True, strikes: bool = False):
+    def get_options_expirations(self, symbol: Symbol, include_all_roots: bool = True, strikes: bool = False):
         logger.debug(f"get options chain api request: sym {symbol}")
 
-        params = {'symbol': symbol, 'includeAllRoots': str(
-            include_all_roots).lower(), 'strikes': str(strikes).lower()}
+        params = {'symbol': symbol.name, 'includeAllRoots': str(include_all_roots).lower(), 'strikes': str(strikes).lower()}
         return self.get_to_json("/v1/markets/options/expirations", params)
 
-    def lookup_options_symbols(self, underlying: str):
+    def lookup_options_symbols(self, underlying: Symbol):
         logger.debug(f"get options chain api request: underlying {underlying}")
 
-        params = {'underlying': underlying}
+        params = {'underlying': underlying.name}
         return self.get_to_json("/v1/markets/options/lookup", params)
 
     # -- API interface --
 
-    def get_option_chains(self, symbol: str, interval: data_util.TimeInterval) -> pd.DataFrame:
-        if interval != data_util.TimeInterval.day:
-            print(interval, interval == data_util.TimeInterval.day)
-            logger.error(
-                f"tradier option data only available in day resolution not {interval}! Skipping {symbol}")
+    def download_option_chains(self, symbol: Symbol, interval: TimeInterval) -> pd.DataFrame:
+        if interval != TimeInterval.day:
+            logger.error(f"tradier option data only available in day resolution not {interval}! Skipping {symbol}")
             return pd.DataFrame()
 
         expiration = self.get_options_expirations(symbol)
@@ -95,22 +87,20 @@ class TradierAPI(api_interface.EquityAPI):
 
         # list containing options object
         data_frame = pd.DataFrame()
-        for exp in expiration:
-            params = {'symbol': symbol, 'expiration': exp, 'greeks': "true"}
-            json_data = self.get_to_json(
-                "/v1/markets/options/chains", params)["options"]["option"]
+        for exp in expiration[:4]:
+            params = {'symbol': symbol.name, 'expiration': exp, 'greeks': "true"}
+            json_data = self.get_to_json("/v1/markets/options/chains", params)["options"]["option"]
             for contract in json_data:
                 # flattens the "greeks" sub dict
-                data_frame = data_frame.append(
-                    pd.Series({**contract.pop("greeks"), **contract}), ignore_index=True)
+                data_frame = data_frame.append(pd.Series({**contract.pop("greeks"), **contract}), ignore_index=True)
 
         data_frame.set_index("symbol", inplace=True)
         # TODO add in_the_money column
         print(data_frame)
         return data_frame
 
-    def get_price_history(self, symbol: str, interval: data_util.TimeInterval) -> pd.DataFrame:
+    def download_price_history(self, symbol: str, interval: TimeInterval) -> pd.DataFrame:
         pass
 
-    def get_fundamental_data(self, symbol: str, interval: data_util.TimeInterval) -> pd.DataFrame:
+    def download_fundamental_data(self, symbol: str, interval: TimeInterval) -> pd.DataFrame:
         pass

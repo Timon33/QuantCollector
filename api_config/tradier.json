@@ -1,1 +1,7 @@
-5kkzSP8Zoa21Nv63V4nFjr005SPy
+{
+  "secret": "5kkzSP8Zoa21Nv63V4nFjr005SPy",
+  "url": "tradier.com",
+  "api_type": "sandbox",
+  "price_history_column_renaming": {},
+  "option_chain_column_renaming": {}
+}

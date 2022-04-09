@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import logging
+import os
 from abc import ABC, abstractmethod
 
 import config
@@ -21,32 +22,40 @@ class API(ABC):
     def name(self) -> str:
         raise NotImplementedError
 
-    @property
-    @abstractmethod
-    def asset_class(self) -> AssetClass:
-        raise NotImplementedError
-
-    def save_dataframe(self, symbol: Symbol, interval: TimeInterval, data: pd.DataFrame):
+    def save_dataframe(self, symbol: Symbol, interval: TimeInterval, data: pd.DataFrame, asset_class: AssetClass):
         item_name = f"{symbol.name}.{interval.name}"
-        if item_name not in self.store.collection(self.asset_class.value).items:
-            self.store.collection(self.asset_class.value).write(
-                item_name, data, metadata={"data_source": self.name})
+
+        if isinstance(data.index, pd.MultiIndex):
+            # kinda ugly way of getting the path from pystore
+            path = self.store.collection(asset_class.value)._item_path(item_name, as_string=True)
+            if os.path.isfile(path):
+                data.to_csv(path, mode="ab", header=False, compression="zip")
+            else:
+                data.to_csv(path, mode="wb", header=True, compression="zip")
         else:
-            self.store.collection(
-                self.asset_class.value).append(item_name, data)
+            if item_name not in self.store.collection(asset_class.value).items:
+                self.store.collection(asset_class.value).write(item_name, data, metadata={"data_source": self.name})
+            else:
+                self.store.collection(asset_class.value).append(item_name, data)
 
     # saves all data provided by the api for the given symbol
-
     @ abstractmethod
     def download_all(self, symbol: Symbol, interval: TimeInterval):
         raise NotImplementedError
 
+    @staticmethod
+    def rename_dataframes(df: pd.DataFrame, renaming: dict, types: dict) -> pd.DataFrame:
+        df = df.rename(columns=renaming, errors="ignore")
+        df = df.reindex(columns=types.keys())
+        # filter Nan values for types to be converted to int
+        for c_name, c_type in types.items():
+            if "int" in c_type:
+                print("Null in type", c_name)
+                df = df[df[c_name].notnull()]
+        return df.astype(types)
+
 
 class EquityAPI(API):
-
-    @ property
-    def asset_class(self) -> AssetClass:
-        return AssetClass.equity
 
     # overwriten by implementing subclass, column names/types api specific
 
@@ -68,21 +77,23 @@ class EquityAPI(API):
         data_format = config.get_dataframe_types("price_history")
 
         price_data = self.download_price_history(symbol, interval)
-        # missing columns can be ignored, they will be filled with NaNs
-        price_data = price_data.rename(
-            columns=self.api_conf["price_history_column_renaming"], errors="ignore")
-        # create missing columns
-        price_data = price_data.reindex(columns=data_format.keys())
-        # TODO dynamic filtering of nan values
-        price_data = price_data[price_data.volume.notnull()]
-        price_data = price_data.astype(data_format)
-        self.save_dataframe(symbol, interval, price_data)
+        price_data = self.rename_dataframes(
+            price_data,
+            self.api_conf["price_history_column_renaming"],
+            config.get_dataframe_types("price_history")
+        )
+        self.save_dataframe(symbol, interval, price_data, AssetClass.options)
 
     def save_option_chains(self, symbol: Symbol, interval: TimeInterval) -> None:
+
         option_data = self.download_option_chains(symbol, interval)
-        option_data = option_data.rename(self.api_conf["option_chain_column_renaming"]).astype(
-            config.get_dataframe_types("option_chain"))
-        self.save_dataframe(symbol, interval, option_data)
+        option_data = self.rename_dataframes(
+            option_data,
+            self.api_conf["option_chain_column_renaming"],
+            config.get_dataframe_types("option_chain")
+        )
+        option_data = pd.concat({np.datetime64('today', "D"): option_data})
+        self.save_dataframe(symbol, interval, option_data, AssetClass.options)
 
     def download_all(self, symbol: Symbol, interval: TimeInterval):
         logger.info(

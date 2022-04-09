@@ -11,6 +11,7 @@ class AssetClass(Enum):
     alternative = "alternative"
     bonds = "bonds"
     commodities = "commodities"
+    options = "options"
 
 
 class TimeInterval(Enum):
